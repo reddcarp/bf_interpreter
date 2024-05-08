@@ -21,13 +21,12 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    bf_interpreter::Token* head = nullptr;
     int return_code = 0;
     try {
         std::vector<char> data(10, 0);
         int data_index = 0;
-        head = bf_interpreter::tokenizeStream(fs);
-        bf_interpreter::Token* token = head->next_token;
+        std::unique_ptr<bf_interpreter::Token> head = bf_interpreter::tokenizeStream(fs);
+        bf_interpreter::Token* token = head->next_token.get();
 
         while (token != nullptr) {
             token = token->action(data_index, data);
@@ -39,7 +38,6 @@ int main(int argc, char* argv[]) {
     }
 
     // cleanup
-    delete head;
     fs.close();
 
     return return_code;

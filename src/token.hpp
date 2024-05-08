@@ -1,11 +1,9 @@
-// what we need
-// a reference to the current data pointer index // index
-// a reference to the data 
 #ifndef BF_INTERPRETER_TOKEN_HPP
 #define BF_INTERPRETER_TOKEN_HPP
 
-#include <vector>
 #include <iostream>
+#include <memory>
+#include <vector>
 
 namespace bf_interpreter {
 
@@ -13,10 +11,10 @@ namespace bf_interpreter {
 class Token {
  public:
     explicit Token(char t);
-    virtual ~Token();
+    virtual ~Token() = default;
 
     virtual Token* action(int &data_index, std::vector<char> &data) = 0;
-    Token *next_token = nullptr;
+    std::unique_ptr<Token> next_token = nullptr;
     size_t repeated = 1;
     const char token;
 };
@@ -36,7 +34,7 @@ class JmpToken : public Token {
 class StartToken : public Token {
  public:
     StartToken() : Token(' ') {}
-    Token* action(int &data_index, std::vector<char> &data) final { return next_token; }
+    Token* action(int &data_index, std::vector<char> &data) final { return next_token.get(); }
 };
 
 // Implemented Tokens

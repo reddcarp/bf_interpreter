@@ -4,17 +4,13 @@
 
 #include "token.hpp"
 
-#define BACKSPACE_VALUE 10
+constexpr char BACKSPACE_VALUE = 10;
 
 namespace bf_interpreter {
 
 Token::Token(char t)
 : token(t)
 {}
-
-Token::~Token() {
-    delete next_token;
-}
 
 IncrementIndexToken::IncrementIndexToken() : Token('>') {}
 Token* IncrementIndexToken::action(int &data_index, std::vector<char> &data) {
@@ -25,7 +21,7 @@ Token* IncrementIndexToken::action(int &data_index, std::vector<char> &data) {
     for (size_t i = data_index; i > data_size; i--) {
         data.emplace_back(0);
     }
-    return next_token;
+    return next_token.get();
 }
 
 DecrementIndexToken::DecrementIndexToken() : Token('<') {}
@@ -36,19 +32,19 @@ Token* DecrementIndexToken::action(int &data_index, std::vector<char> &data) {
         throw std::underflow_error("Error: Trying to access index < 0");
     }
 
-    return next_token;
+    return next_token.get();
 }
 
 IncrementDataToken::IncrementDataToken() : Token('+') {}
 Token* IncrementDataToken::action(int &data_index, std::vector<char> &data) {
     data[data_index] += repeated;
-    return next_token;
+    return next_token.get();
 }
 
 DecrementDataToken::DecrementDataToken() : Token('-') {}
 Token* DecrementDataToken::action(int &data_index, std::vector<char> &data) {
     data[data_index] -= repeated;
-    return next_token;
+    return next_token.get();
 }
 
 OutputDataToken::OutputDataToken() : Token('.') {}
@@ -57,7 +53,7 @@ Token* OutputDataToken::action(int &data_index, std::vector<char> &data) {
         std::cout << data[data_index];
     }
 
-    return next_token;
+    return next_token.get();
 }
 
 // TODO: change acquisition of input to be more robust
@@ -76,15 +72,15 @@ Token* InputDataToken::action(int &data_index, std::vector<char> &data) {
     }
     data[data_index] = input;
 
-    return next_token;
+    return next_token.get();
 }
 
 JmpToken::JmpToken(char t) : Token(t) {}
 Token* JmpToken::action(int &data_index, std::vector<char> &data) {
     if (jmpCondition(data[data_index])) {
-        return jmp_to->next_token;
+        return jmp_to->next_token.get();
     }
-    return next_token;
+    return next_token.get();
 }
 
 JmpIfZeroToken::JmpIfZeroToken() : JmpToken('[') {}
