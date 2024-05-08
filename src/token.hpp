@@ -12,23 +12,20 @@ namespace bf_interpreter {
 // Abstract classes
 class Token {
  public:
-    Token(char t);
-    // Easy to forget, the destructor is virtual to ensure proper cleanup
-    // it makes it so the proper destructor are called in the derived class
-    // otherwise, only this base destructor would be called
+    explicit Token(char t);
     virtual ~Token();
 
-    virtual Token* action(int &data_index, ::std::vector<char> &data) = 0;
-    Token *next_token;
-    size_t repeated;
+    virtual Token* action(int &data_index, std::vector<char> &data) = 0;
+    Token *next_token = nullptr;
+    size_t repeated = 1;
     const char token;
 };
 
 class JmpToken : public Token {
  public:
-    JmpToken(char t);
+    explicit JmpToken(char t);
 
-    Token* action(int &data_index, ::std::vector<char> &data);
+    Token* action(int &data_index, std::vector<char> &data) final;
     virtual bool jmpCondition(int value) = 0;
 
     Token *jmp_to;
@@ -39,7 +36,7 @@ class JmpToken : public Token {
 class StartToken : public Token {
  public:
     StartToken() : Token(' ') {}
-    virtual Token* action(int &data_index, ::std::vector<char> &data) { return next_token; }
+    Token* action(int &data_index, std::vector<char> &data) final { return next_token; }
 };
 
 // Implemented Tokens
@@ -47,56 +44,56 @@ class StartToken : public Token {
 class IncrementIndexToken : public Token {
  public:
     IncrementIndexToken();
-    virtual Token* action(int &data_index, ::std::vector<char> &data);
+    Token* action(int &data_index, std::vector<char> &data) final;
 };
 
 // BF Token: `<`
 class DecrementIndexToken : public Token {
  public:
     DecrementIndexToken();
-    virtual Token* action(int &data_index, ::std::vector<char> &data); 
+    Token* action(int &data_index, std::vector<char> &data) final;
 };
 
 // BF Token: `+`
 class IncrementDataToken : public Token {
  public:
     IncrementDataToken();
-    virtual Token* action(int &data_index, ::std::vector<char> &data);
+    Token* action(int &data_index, std::vector<char> &data) final;
 };
 
 // BF Token: `-`
 class DecrementDataToken : public Token {
  public:
     DecrementDataToken();
-    virtual Token* action(int &data_index, ::std::vector<char> &data);
+    Token* action(int &data_index, std::vector<char> &data) final;
 };
 
 // BF Token: '.'
 class OutputDataToken : public Token {
  public:
     OutputDataToken();
-    virtual Token* action(int &data_index, ::std::vector<char> &data);
+    Token* action(int &data_index, std::vector<char> &data) final;
 };
 
 // BF Token: `,`
 class InputDataToken : public Token {
  public:
     InputDataToken();
-    virtual Token* action(int &data_index, ::std::vector<char> &data);
+    Token* action(int &data_index, std::vector<char> &data) final;
 };
 
 // BF Token: `[`
 class JmpIfZeroToken : public JmpToken {
  public:
     JmpIfZeroToken();
-    virtual bool jmpCondition(int value);
+    bool jmpCondition(int value) final;
 };
 
 // BF Token: `]`
 class JmpIfNotZeroToken : public JmpToken {
  public:
     JmpIfNotZeroToken();
-    virtual bool jmpCondition(int value);
+    bool jmpCondition(int value) final;
 };
 // ==============================================================
 

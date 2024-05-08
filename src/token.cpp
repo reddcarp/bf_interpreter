@@ -9,9 +9,7 @@
 namespace bf_interpreter {
 
 Token::Token(char t)
-: next_token(nullptr)
-, repeated(1)
-, token(t)
+: token(t)
 {}
 
 Token::~Token() {
@@ -19,7 +17,7 @@ Token::~Token() {
 }
 
 IncrementIndexToken::IncrementIndexToken() : Token('>') {}
-Token* IncrementIndexToken::action(int &data_index, ::std::vector<char> &data) {
+Token* IncrementIndexToken::action(int &data_index, std::vector<char> &data) {
     data_index += repeated;
     size_t data_size = data.size();
 
@@ -31,32 +29,32 @@ Token* IncrementIndexToken::action(int &data_index, ::std::vector<char> &data) {
 }
 
 DecrementIndexToken::DecrementIndexToken() : Token('<') {}
-Token* DecrementIndexToken::action(int &data_index, ::std::vector<char> &data) {
+Token* DecrementIndexToken::action(int &data_index, std::vector<char> &data) {
     data_index -= repeated;
 
     if (data_index < 0) {
-        throw ::std::underflow_error("Error: Trying to access index < 0");
+        throw std::underflow_error("Error: Trying to access index < 0");
     }
 
     return next_token;
 }
 
 IncrementDataToken::IncrementDataToken() : Token('+') {}
-Token* IncrementDataToken::action(int &data_index, ::std::vector<char> &data) {
+Token* IncrementDataToken::action(int &data_index, std::vector<char> &data) {
     data[data_index] += repeated;
     return next_token;
 }
 
 DecrementDataToken::DecrementDataToken() : Token('-') {}
-Token* DecrementDataToken::action(int &data_index, ::std::vector<char> &data) {
+Token* DecrementDataToken::action(int &data_index, std::vector<char> &data) {
     data[data_index] -= repeated;
     return next_token;
 }
 
 OutputDataToken::OutputDataToken() : Token('.') {}
-Token* OutputDataToken::action(int &data_index, ::std::vector<char> &data) {
+Token* OutputDataToken::action(int &data_index, std::vector<char> &data) {
     for (size_t i = 0; i < repeated; i++) {
-        ::std::cout << data[data_index];
+        std::cout << data[data_index];
     }
 
     return next_token;
@@ -66,15 +64,15 @@ Token* OutputDataToken::action(int &data_index, ::std::vector<char> &data) {
 // idea: only accept one character at a time
 // and discard the rest
 InputDataToken::InputDataToken() : Token(',') {}
-Token* InputDataToken::action(int &data_index, ::std::vector<char> &data) {
-    ::std::cout << "Enter a character: ";
+Token* InputDataToken::action(int &data_index, std::vector<char> &data) {
+    std::cout << "Enter a character: ";
     char input = BACKSPACE_VALUE;
 
     // this allows us to have two input requests in a row
     // without the backspace from the previous command
     // affecting the following one
     while (input == BACKSPACE_VALUE) {
-        input = ::std::getchar();
+        input = std::getchar();
     }
     data[data_index] = input;
 
@@ -82,7 +80,7 @@ Token* InputDataToken::action(int &data_index, ::std::vector<char> &data) {
 }
 
 JmpToken::JmpToken(char t) : Token(t) {}
-Token* JmpToken::action(int &data_index, ::std::vector<char> &data) {
+Token* JmpToken::action(int &data_index, std::vector<char> &data) {
     if (jmpCondition(data[data_index])) {
         return jmp_to->next_token;
     }

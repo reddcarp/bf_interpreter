@@ -1,62 +1,55 @@
+#include <format>
 #include <stack>
-#include <stdexcept>
 
 #include "tokenize.hpp"
 
 namespace bf_interpreter {
 
-Token* tokenizeStream(::std::istream &stream) {
+static Token* createAndLinkJmpTokens(::std::stack<Token *>& jpm_starts) {
+    auto jmp_start_token = static_cast<JmpToken *>(jpm_starts.top());
+    jpm_starts.pop();
+
+    auto jmp_end = new JmpIfNotZeroToken();
+    jmp_end->jmp_to = jmp_start_token;
+    jmp_start_token->jmp_to = jmp_end;
+
+    return jmp_end;
+}
+
+template <typename TokenCreate>
+static void handleRepeatableToken(Token *&cur, char c, TokenCreate createToken) {
+    static_assert(std::is_invocable_r_v<Token *, TokenCreate>);
+    if (cur->token == c) {
+        cur->repeated += 1;
+    }
+    else {
+        cur->next_token = createToken();
+        cur = cur->next_token;
+    }
+}
+
+Token* tokenizeStream(std::istream &stream) {
     Token *head = new StartToken();
     Token *cur = head;
-    ::std::stack<Token *> jpm_starts;
+    std::stack<Token *> jpm_starts;
 
     char c;
     while (stream.get(c)) {
         switch(c) {
             case '<':
-                if (cur->token == '<') {
-                    cur->repeated += 1;
-                }
-                else {
-                    cur->next_token = new DecrementIndexToken();
-                    cur = cur->next_token;
-                }
+                handleRepeatableToken(cur, '<', []() { return new DecrementIndexToken(); });
                 break;
             case '>':
-                if (cur->token == '>') {
-                    cur->repeated += 1;
-                }
-                else {
-                    cur->next_token = new IncrementIndexToken();
-                    cur = cur->next_token;
-                }
+                handleRepeatableToken(cur, '>', []() { return new IncrementIndexToken(); });
                 break;
             case '+':
-                if (cur->token == '+') {
-                    cur->repeated += 1;
-                }
-                else {
-                    cur->next_token = new IncrementDataToken();
-                    cur = cur->next_token;
-                }
+                handleRepeatableToken(cur, '+', []() { return new IncrementDataToken(); });
                 break;
             case '-':
-                if (cur->token == '-') {
-                    cur->repeated += 1;
-                }
-                else {
-                    cur->next_token = new DecrementDataToken();
-                    cur = cur->next_token;
-                }
+                handleRepeatableToken(cur, '-', []() { return new DecrementDataToken(); });
                 break;
             case '.':
-                if (cur->token == '.') {
-                    cur->repeated += 1;
-                }
-                else {
-                    cur->next_token = new OutputDataToken();
-                    cur = cur->next_token;
-                }
+                handleRepeatableToken(cur, '.', []() { return new OutputDataToken(); });
                 break;
             case ',':
                 cur->next_token = new InputDataToken();
@@ -70,20 +63,10 @@ Token* tokenizeStream(::std::istream &stream) {
             case ']':
                 if (jpm_starts.empty()) {
                     delete head;
-                    throw ::std::logic_error("Error: missing corresponding `[`");
+                    throw std::format_error("Error: missing corresponding `[`");
                 }
 
-                // scoped so the locally defined variables are not accessible outside of this case
-                {
-                    // static_cast since we already know the type of objects in jmp_starts
-                    auto jmp_start_token = static_cast<JmpToken *>(jpm_starts.top());
-                    jpm_starts.pop();
-                    auto jmp_end = new JmpIfNotZeroToken();
-                    jmp_end->jmp_to = jmp_start_token;
-                    jmp_start_token->jmp_to = jmp_end;
-
-                    cur->next_token = jmp_end;
-                }
+                cur->next_token = createAndLinkJmpTokens(jpm_starts);
                 cur = cur->next_token;
                 break;
             default:
@@ -93,7 +76,7 @@ Token* tokenizeStream(::std::istream &stream) {
 
     if (!jpm_starts.empty()) {
         delete head;
-        throw ::std::logic_error("Error: missing corresponding `]`");
+        throw std::format_error("Error: missing corresponding `]`");
     }
 
     return head;
