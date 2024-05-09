@@ -1,0 +1,7 @@
++
+# missing matching character
+    >++++
+    [
+        >++>+++>+++>+<<<<-
+    ]
+]
