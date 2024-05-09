@@ -8,7 +8,7 @@ tearDown() {
 }
 
 testErrorNoMatchingEndBracket() {
-    ./bf_interpreter ../test/bf_scripts/error_no_matching_end_bracket.bf > ${OUTPUT_FILE}
+    ./bf_interpreter ../test/bf_scripts/error_no_matching_end_bracket.bf 2> ${OUTPUT_FILE}
     assertNotEquals 0 $?
     assertEquals 'Error: missing corresponding `]`' "$( cat ${OUTPUT_FILE} )"
 }

@@ -5,11 +5,8 @@
 
 namespace bf_interpreter {
 
-// TODO: create a linked list structure to store the Tokens
-// https://en.cppreference.com/w/cpp/memory/unique_ptr
-
-static std::unique_ptr<Token> createAndLinkJmpTokens(::std::stack<Token *>& jpm_starts) {
-    auto jmp_start_token = static_cast<JmpToken *>(jpm_starts.top());
+static std::unique_ptr<Token> createAndLinkJmpTokens(std::stack<JmpIfZeroToken *> &jpm_starts) {
+    auto jmp_start_token = jpm_starts.top();
     jpm_starts.pop();
 
     auto jmp_end = std::make_unique<JmpIfNotZeroToken>();
@@ -34,25 +31,25 @@ static void handleRepeatableToken(Token *&cur, char c, TokenCreate createToken) 
 std::unique_ptr<Token> tokenizeStream(std::istream &stream) {
     auto head = std::make_unique<StartToken>();
     Token *cur = head.get();
-    std::stack<Token *> jpm_starts;
+    std::stack<JmpIfZeroToken *> jpm_starts;
 
     char c;
     while (stream.get(c)) {
         switch(c) {
             case '<':
-                handleRepeatableToken(cur, '<', []() { return std::make_unique<DecrementIndexToken>(); });
+                handleRepeatableToken(cur, c, []() { return std::make_unique<DecrementIndexToken>(); });
                 break;
             case '>':
-                handleRepeatableToken(cur, '>', []() { return std::make_unique<IncrementIndexToken>(); });
+                handleRepeatableToken(cur, c, []() { return std::make_unique<IncrementIndexToken>(); });
                 break;
             case '+':
-                handleRepeatableToken(cur, '+', []() { return std::make_unique<IncrementDataToken>(); });
+                handleRepeatableToken(cur, c, []() { return std::make_unique<IncrementDataToken>(); });
                 break;
             case '-':
-                handleRepeatableToken(cur, '-', []() { return std::make_unique<DecrementDataToken>(); });
+                handleRepeatableToken(cur, c, []() { return std::make_unique<DecrementDataToken>(); });
                 break;
             case '.':
-                handleRepeatableToken(cur, '.', []() { return std::make_unique<OutputDataToken>(); });
+                handleRepeatableToken(cur, c, []() { return std::make_unique<OutputDataToken>(); });
                 break;
             case ',':
                 cur->next_token = std::make_unique<InputDataToken>();
@@ -61,7 +58,7 @@ std::unique_ptr<Token> tokenizeStream(std::istream &stream) {
             case '[':
                 cur->next_token = std::make_unique<JmpIfZeroToken>();
                 cur = cur->next_token.get();
-                jpm_starts.push(cur);
+                jpm_starts.push(static_cast<JmpIfZeroToken *>(cur));
                 break;
             case ']':
                 if (jpm_starts.empty()) {

@@ -8,7 +8,7 @@ tearDown() {
 }
 
 testErrorNoMatchingEndBracket() {
-    ./bf_interpreter ../test/bf_scripts/error_data_pointer_out_of_bound.bf > ${OUTPUT_FILE}
+    ./bf_interpreter ../test/bf_scripts/error_data_pointer_out_of_bound.bf 2> ${OUTPUT_FILE}
     assertNotEquals 0 $?
     assertEquals 'Error: Trying to access index < 0' "$( cat ${OUTPUT_FILE} )"
 }
