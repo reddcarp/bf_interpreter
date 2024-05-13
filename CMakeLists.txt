@@ -19,8 +19,6 @@ set(bf_interpreter_INCLUDE_DIRS
 )
 set(bf_interpreter_SRC_FILES
     src/main.cpp
-    src/token.cpp
-    src/tokenize.cpp
 )
 
 file(GLOB_RECURSE bf_interpreter_HEADER_FILES
